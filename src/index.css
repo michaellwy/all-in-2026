@@ -1,0 +1,198 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Bright, lively palette */
+  --color-bg: #FFFBF5;
+  --color-bg-alt: #FFF7ED;
+  --color-bg-card: #FFFFFF;
+  --color-border: #E5E0D8;
+  --color-border-bold: #D4CEC4;
+
+  /* Text */
+  --color-text: #1A1A1A;
+  --color-text-secondary: #5C5C5C;
+  --color-text-muted: #8C8C8C;
+
+  /* Vibrant host colors */
+  --color-friedberg: #3B82F6;
+  --color-chamath: #10B981;
+  --color-sacks: #F59E0B;
+  --color-jason: #EF4444;
+
+  /* Fun accent */
+  --color-accent: #7C3AED;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    line-height: 1.6;
+  }
+
+  ::selection {
+    background-color: #FDE68A;
+    color: var(--color-text);
+  }
+}
+
+@layer components {
+  /* Bold display font */
+  .font-display {
+    font-family: 'Nunito', system-ui, sans-serif;
+    font-weight: 900;
+  }
+
+  .font-body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+
+  /* Chunky headline */
+  .heading-hero {
+    font-family: 'Nunito', system-ui, sans-serif;
+    font-weight: 900;
+    font-size: clamp(3rem, 12vw, 6rem);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+  }
+
+  .heading-hero .hero-line {
+    display: block;
+    position: relative;
+  }
+
+  .heading-hero .hero-line:nth-child(2) {
+    color: var(--color-accent);
+  }
+
+  .heading-section {
+    font-family: 'Nunito', system-ui, sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.5rem, 5vw, 2.25rem);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+
+  /* Fun card styles */
+  .card {
+    background: var(--color-bg-card);
+    border: 3px solid var(--color-text);
+    border-radius: 16px;
+    box-shadow: 6px 6px 0 var(--color-text);
+    transition: all 0.15s ease;
+  }
+
+  .card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0 var(--color-text);
+  }
+
+  .card:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 var(--color-text);
+  }
+
+  /* Pill/badge style */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: 2px solid currentColor;
+    transition: all 0.15s ease;
+  }
+
+  /* Section number */
+  .section-number {
+    font-family: 'Nunito', system-ui, sans-serif;
+    font-weight: 900;
+    font-size: clamp(4rem, 15vw, 10rem);
+    line-height: 0.8;
+    color: var(--color-border);
+    user-select: none;
+  }
+
+  /* Squiggly underline effect */
+  .squiggle {
+    text-decoration: underline;
+    text-decoration-style: wavy;
+    text-underline-offset: 4px;
+  }
+
+  /* Chart container */
+  .chart-box {
+    background: var(--color-bg-alt);
+    border: 2px solid var(--color-border-bold);
+    border-radius: 12px;
+  }
+
+  /* Host avatar container */
+  .avatar-blob {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 3px solid var(--color-text);
+    overflow: hidden;
+    background: white;
+  }
+
+  .avatar-blob-lg {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border-width: 4px;
+    border-style: solid;
+    background: white;
+  }
+
+  /* Fun zigzag border */
+  .zigzag-border {
+    background:
+      linear-gradient(135deg, var(--color-bg) 25%, transparent 25%) -20px 0,
+      linear-gradient(225deg, var(--color-bg) 25%, transparent 25%) -20px 0,
+      linear-gradient(315deg, var(--color-bg) 25%, transparent 25%),
+      linear-gradient(45deg, var(--color-bg) 25%, transparent 25%);
+    background-size: 40px 40px;
+    background-color: var(--color-text);
+    height: 20px;
+  }
+
+  /* Sticker-style label */
+  .sticker {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: #FDE68A;
+    border: 2px solid var(--color-text);
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    transform: rotate(-2deg);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Rotate variations for playful feel */
+  .rotate-1 { transform: rotate(1deg); }
+  .rotate-2 { transform: rotate(2deg); }
+  .-rotate-1 { transform: rotate(-1deg); }
+  .-rotate-2 { transform: rotate(-2deg); }
+}
