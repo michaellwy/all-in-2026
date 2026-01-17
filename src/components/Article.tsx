@@ -220,7 +220,7 @@ export function Article() {
 }
 
 const hostCatchphrases: Record<HostId, string> = {
-  friedberg: "That's below my line",
+  friedberg: "We are in a fiscal crisis",
   chamath: "[Laughing] Groq.. Groq.. Groqqq",
   sacks: "Let's be clear...",
   jason: "Disgraziad!",
