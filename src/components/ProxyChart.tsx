@@ -224,7 +224,7 @@ export function ProxyChart({ proxy, hostColor }: ProxyChartProps) {
 
   return (
     <div onClick={(e) => e.stopPropagation()}>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div className="flex items-baseline gap-2 flex-wrap">
           <span className="font-display text-2xl text-[var(--color-text)]">
             {formatValue(currentValue)}
@@ -250,27 +250,27 @@ export function ProxyChart({ proxy, hostColor }: ProxyChartProps) {
         />
       </div>
 
-      <div className="h-48">
+      <div className="h-48 overflow-hidden">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}
-            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+            margin={{ top: 10, right: 5, left: -10, bottom: 0 }}
           >
             <XAxis
               dataKey="date"
               tickFormatter={formatDate}
-              tick={{ fontSize: 11, fill: '#8C8C8C', fontFamily: 'DM Sans' }}
+              tick={{ fontSize: 10, fill: '#8C8C8C', fontFamily: 'DM Sans' }}
               axisLine={false}
               tickLine={false}
-              minTickGap={50}
+              minTickGap={40}
             />
             <YAxis
               domain={['auto', 'auto']}
               tickFormatter={(v) => usePercentageYAxis ? formatPctReturn(v) : formatValue(v)}
-              tick={{ fontSize: 11, fill: '#8C8C8C', fontFamily: 'DM Sans' }}
+              tick={{ fontSize: 10, fill: '#8C8C8C', fontFamily: 'DM Sans' }}
               axisLine={false}
               tickLine={false}
-              width={60}
+              width={50}
             />
             <Tooltip
               content={({ active, payload }) => {

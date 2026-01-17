@@ -112,13 +112,13 @@ export function FredChart({ proxy, hostColor }: FredChartProps) {
   return (
     <div>
       {/* Timeframe toggles */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex gap-1">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+        <div className="flex gap-1 flex-wrap">
           {TIMEFRAMES.map((tf) => (
             <button
               key={tf.key}
               onClick={() => setTimeframe(tf.key)}
-              className="px-2 py-0.5 text-xs font-bold rounded-full transition-all"
+              className="px-2 py-0.5 text-[11px] sm:text-xs font-bold rounded-full transition-all"
               style={{
                 backgroundColor: timeframe === tf.key ? hostColor : 'transparent',
                 color: timeframe === tf.key ? 'white' : hostColor,
@@ -140,9 +140,9 @@ export function FredChart({ proxy, hostColor }: FredChartProps) {
       </div>
 
       {/* Chart */}
-      <div className="h-[180px]">
+      <div className="h-[180px] overflow-hidden">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+          <AreaChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: -5 }}>
             <defs>
               <linearGradient id={`gradient-${proxy.id}`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={hostColor} stopOpacity={0.3} />
@@ -163,7 +163,7 @@ export function FredChart({ proxy, hostColor }: FredChartProps) {
                 return val;
               }}
               interval="preserveStartEnd"
-              minTickGap={50}
+              minTickGap={40}
             />
             <YAxis
               domain={[minVal - padding, maxVal + padding]}

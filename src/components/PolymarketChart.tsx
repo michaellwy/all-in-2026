@@ -135,7 +135,7 @@ export function PolymarketChart({ proxy, hostColor }: PolymarketChartProps) {
 
   return (
     <div onClick={(e) => e.stopPropagation()}>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <span className="font-display text-2xl text-[var(--color-text)]">
           {formatValue(currentValue)}
         </span>
@@ -146,27 +146,27 @@ export function PolymarketChart({ proxy, hostColor }: PolymarketChartProps) {
         />
       </div>
 
-      <div className="h-48">
+      <div className="h-48 overflow-hidden">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={data}
-            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+            margin={{ top: 10, right: 5, left: -10, bottom: 0 }}
           >
             <XAxis
               dataKey="date"
               tickFormatter={formatDate}
-              tick={{ fontSize: 11, fill: '#8C8C8C', fontFamily: 'DM Sans' }}
+              tick={{ fontSize: 10, fill: '#8C8C8C', fontFamily: 'DM Sans' }}
               axisLine={false}
               tickLine={false}
-              minTickGap={50}
+              minTickGap={40}
             />
             <YAxis
               domain={[yMin, yMax]}
               tickFormatter={(v) => `${v}%`}
-              tick={{ fontSize: 11, fill: '#8C8C8C', fontFamily: 'DM Sans' }}
+              tick={{ fontSize: 10, fill: '#8C8C8C', fontFamily: 'DM Sans' }}
               axisLine={false}
               tickLine={false}
-              width={45}
+              width={40}
             />
             <Tooltip
               content={({ active, payload }) => {

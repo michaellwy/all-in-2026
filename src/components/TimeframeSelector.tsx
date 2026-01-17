@@ -21,7 +21,7 @@ export function TimeframeSelector({
   hostColor,
 }: TimeframeSelectorProps) {
   return (
-    <div className="flex gap-1 p-1 bg-[var(--color-bg)] rounded-full border-2 border-[var(--color-border)] w-fit">
+    <div className="flex gap-0.5 sm:gap-1 p-1 bg-[var(--color-bg)] rounded-full border-2 border-[var(--color-border)] w-fit max-w-full overflow-x-auto">
       {timeframes.map((tf) => (
         <button
           key={tf}
@@ -30,7 +30,7 @@ export function TimeframeSelector({
             onChange(tf);
           }}
           className={`
-            px-2.5 py-1 text-xs font-bold rounded-full transition-all
+            px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded-full transition-all whitespace-nowrap flex-shrink-0
             ${
               selected === tf
                 ? 'text-white shadow-sm'
@@ -54,7 +54,7 @@ export function PolymarketTimeframeSelector({
   hostColor,
 }: PolymarketTimeframeSelectorProps) {
   return (
-    <div className="flex gap-1 p-1 bg-[var(--color-bg)] rounded-full border-2 border-[var(--color-border)] w-fit">
+    <div className="flex gap-0.5 sm:gap-1 p-1 bg-[var(--color-bg)] rounded-full border-2 border-[var(--color-border)] w-fit max-w-full overflow-x-auto">
       {polymarketTimeframes.map((tf) => (
         <button
           key={tf}
@@ -63,7 +63,7 @@ export function PolymarketTimeframeSelector({
             onChange(tf);
           }}
           className={`
-            px-2 py-1 text-xs font-bold rounded-full transition-all
+            px-2 py-1 text-[11px] sm:text-xs font-bold rounded-full transition-all whitespace-nowrap flex-shrink-0
             ${
               selected === tf
                 ? 'text-white shadow-sm'
