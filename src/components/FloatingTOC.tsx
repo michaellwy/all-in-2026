@@ -95,27 +95,21 @@ export function FloatingTOC() {
                 <AnimatePresence>
                   {isHovered && (
                     <motion.div
-                      initial={{ opacity: 0, x: -8, scale: 0.9 }}
-                      animate={{ opacity: 1, x: 0, scale: 1 }}
-                      exit={{ opacity: 0, x: -8, scale: 0.9 }}
+                      initial={{ opacity: 0, x: 44, y: '-50%' }}
+                      animate={{ opacity: 1, x: 48, y: '-50%' }}
+                      exit={{ opacity: 0, x: 44, y: '-50%' }}
                       transition={{
                         type: 'spring',
-                        stiffness: 400,
-                        damping: 25,
-                        mass: 0.8,
+                        stiffness: 500,
+                        damping: 30,
                       }}
-                      className="absolute left-full top-1/2 -translate-y-1/2 ml-3 pointer-events-none z-10"
+                      className="absolute left-0 top-1/2 pointer-events-none z-10"
                     >
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.05, duration: 0.15 }}
-                        className="bg-[var(--color-text)] text-white text-sm font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg"
-                      >
+                      <div className="bg-[var(--color-text)] text-white text-sm font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg relative">
                         {category.title}
                         {/* Arrow */}
                         <div className="absolute right-full top-1/2 -translate-y-1/2 border-8 border-transparent border-r-[var(--color-text)]" />
-                      </motion.div>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
