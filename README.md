@@ -8,7 +8,7 @@ An interactive editorial article that tracks predictions from the All-In Podcast
 
 Each prediction is linked to trackable "proxies" - real data sources like stock prices, economic indicators, and prediction markets - allowing readers to see objective evidence of whether predictions are coming true.
 
-**Live Demo:** [Deployed on Vercel]
+**Live Demo:** https://allin2026.vercel.app/
 
 ## Features
 
