@@ -12,7 +12,24 @@ export function useIPOData() {
     queryKey: ['ipo-list-2026'],
     queryFn: async () => {
       try {
-        // Fetch the stockanalysis.com IPO page via CORS proxy
+        const isDev = import.meta.env.DEV;
+
+        if (!isDev) {
+          // In production, use Vercel serverless function (no CORS issues)
+          const response = await fetch('/api/ipo');
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch IPO data from API');
+          }
+
+          const data = await response.json();
+          if (Array.isArray(data) && data.length > 0) {
+            return data;
+          }
+          throw new Error('Empty IPO data from API');
+        }
+
+        // In development, use CORS proxy
         const url = 'https://stockanalysis.com/ipos/';
         const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
 
