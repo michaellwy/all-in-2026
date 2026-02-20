@@ -13,13 +13,20 @@ export function useStockData(ticker: string, timeframe: Timeframe) {
       const period = getYahooFinancePeriod(timeframe);
 
       try {
-        // Use corsproxy.io for development, serverless function for production
-        // Use weekly interval for max (all time) to avoid too many data points
+        const isDev = import.meta.env.DEV;
         const interval = period === 'max' || period === '1y' ? '1wk' : '1d';
-        const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=${period}&interval=${interval}`;
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
 
-        const response = await fetch(proxyUrl);
+        let response: Response;
+
+        if (isDev) {
+          // In development, use corsproxy.io to bypass CORS
+          const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=${period}&interval=${interval}`;
+          const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
+          response = await fetch(proxyUrl);
+        } else {
+          // In production, use Vercel serverless function
+          response = await fetch(`/api/stock?ticker=${encodeURIComponent(ticker)}&period=${period}`);
+        }
 
         if (!response.ok) {
           throw new Error('Failed to fetch stock data');
@@ -27,7 +34,12 @@ export function useStockData(ticker: string, timeframe: Timeframe) {
 
         const data = await response.json();
 
-        // Handle Yahoo Finance raw response format
+        // Handle pre-processed response from serverless function
+        if (Array.isArray(data)) {
+          return data;
+        }
+
+        // Handle Yahoo Finance raw response format (from corsproxy in dev)
         if (data.chart?.result?.[0]) {
           const result = data.chart.result[0];
           const timestamps = result.timestamp;
@@ -43,11 +55,6 @@ export function useStockData(ticker: string, timeframe: Timeframe) {
               value: closes[i],
             }))
             .filter((point: { value: number | null }) => point.value !== null);
-        }
-
-        // Handle pre-processed response format
-        if (Array.isArray(data)) {
-          return data;
         }
 
         throw new Error('Unexpected response format');
