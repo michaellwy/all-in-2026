@@ -14,17 +14,13 @@ export function usePolymarketData(slug: string, timeframe: PolymarketTimeframe) 
       const { interval, fidelity } = getPolymarketApiParams(timeframe);
 
       try {
-        // Use local proxy in dev, external CORS proxy in production
-        const isDev = import.meta.env.DEV;
-        const gammaBase = isDev ? '/api/polymarket/gamma' : 'https://gamma-api.polymarket.com';
-        const clobBase = isDev ? '/api/polymarket/clob' : 'https://clob.polymarket.com';
-        const corsProxy = (url: string) => isDev ? url : `https://corsproxy.io/?${encodeURIComponent(url)}`;
+        // Always use our own serverless proxy endpoints (works in both dev and prod)
+        const marketBase = '/api/polymarket/market';
+        const historyBase = '/api/polymarket/history';
 
         // Try exact slug match first
-        const searchUrl = `${gammaBase}/markets?slug=${slug}`;
-
         let market = null;
-        let searchResponse = await fetch(isDev ? searchUrl : corsProxy(searchUrl));
+        let searchResponse = await fetch(`${marketBase}?slug=${encodeURIComponent(slug)}`);
 
         if (searchResponse.ok) {
           const markets = await searchResponse.json();
@@ -33,23 +29,10 @@ export function usePolymarketData(slug: string, timeframe: PolymarketTimeframe) 
           }
         }
 
-        // If no exact match, try text search
-        if (!market) {
-          const textSearchUrl = `${gammaBase}/markets?_limit=5&closed=false&textSearch=${encodeURIComponent(slug.replace(/-/g, ' '))}`;
-          searchResponse = await fetch(isDev ? textSearchUrl : corsProxy(textSearchUrl));
-
-          if (searchResponse.ok) {
-            const markets = await searchResponse.json();
-            if (markets && markets.length > 0) {
-              market = markets[0];
-            }
-          }
-        }
-
         if (market) {
           // Try to get price history with appropriate interval
-          const historyUrl = `${clobBase}/prices-history?market=${market.conditionId}&interval=${interval}&fidelity=${fidelity}`;
-          const historyResponse = await fetch(isDev ? historyUrl : corsProxy(historyUrl));
+          const historyUrl = `${historyBase}?market=${market.conditionId}&interval=${interval}&fidelity=${fidelity}`;
+          const historyResponse = await fetch(historyUrl);
 
           if (historyResponse.ok) {
             const data = await historyResponse.json();

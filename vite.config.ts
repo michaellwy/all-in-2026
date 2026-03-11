@@ -30,15 +30,25 @@ export default defineConfig({
           });
         },
       },
-      '/api/polymarket/gamma': {
+      '/api/polymarket/market': {
         target: 'https://gamma-api.polymarket.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/polymarket\/gamma/, ''),
+        rewrite: (path) => {
+          const url = new URL(path, 'http://localhost');
+          const slug = url.searchParams.get('slug') || '';
+          return `/markets?slug=${encodeURIComponent(slug)}`;
+        },
       },
-      '/api/polymarket/clob': {
+      '/api/polymarket/history': {
         target: 'https://clob.polymarket.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/polymarket\/clob/, ''),
+        rewrite: (path) => {
+          const url = new URL(path, 'http://localhost');
+          const market = url.searchParams.get('market') || '';
+          const interval = url.searchParams.get('interval') || '';
+          const fidelity = url.searchParams.get('fidelity') || '';
+          return `/prices-history?market=${market}&interval=${interval}&fidelity=${fidelity}`;
+        },
       },
       '/api/news': {
         target: 'https://news.google.com',
