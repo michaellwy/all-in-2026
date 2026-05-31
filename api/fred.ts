@@ -1,4 +1,7 @@
 // Vercel Serverless Function for FRED data proxy
+// Uses the official FRED JSON API (https://api.stlouisfed.org). Requires
+// FRED_API_KEY set in Vercel env vars. Get a free key at:
+// https://fred.stlouisfed.org/docs/api/api_key.html
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(
@@ -11,28 +14,44 @@ export default async function handler(
     return res.status(400).json({ error: 'Series ID is required' });
   }
 
+  const apiKey = process.env.FRED_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'FRED_API_KEY not configured' });
+  }
+
   try {
-    // FRED public CSV endpoint (no API key required)
-    const transformParam = transform ? `&transformation=${transform}` : '';
-    const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${series}${transformParam}`;
-
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      },
+    const params = new URLSearchParams({
+      series_id: series,
+      api_key: apiKey,
+      file_type: 'json',
     });
-
-    if (!response.ok) {
-      throw new Error(`FRED API error: ${response.status}`);
+    if (transform && typeof transform === 'string') {
+      // FRED official API uses `units` (e.g. pc1 = year-over-year % change)
+      params.set('units', transform);
     }
 
-    const csvData = await response.text();
+    const url = `https://api.stlouisfed.org/fred/series/observations?${params}`;
+    const response = await fetch(url);
 
-    // Set cache headers (FRED data updates less frequently)
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`FRED API ${response.status}: ${body.slice(0, 200)}`);
+    }
+
+    const json = (await response.json()) as {
+      observations: Array<{ date: string; value: string }>;
+    };
+
+    // Emit CSV so the existing client parser keeps working:
+    // header row + `date,value` lines, skipping missing values ('.').
+    const lines = ['observation_date,value'];
+    for (const obs of json.observations) {
+      if (obs.value !== '.') lines.push(`${obs.date},${obs.value}`);
+    }
+
     res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate');
     res.setHeader('Content-Type', 'text/csv');
-
-    return res.status(200).send(csvData);
+    return res.status(200).send(lines.join('\n'));
   } catch (error) {
     console.error('FRED error:', error);
     return res.status(500).json({
