@@ -48,12 +48,12 @@ export function IPOList({ hostColor }: IPOListProps) {
           Unable to load IPO data
         </p>
         <a
-          href="https://stockanalysis.com/ipos/"
+          href="https://www.nasdaq.com/market-activity/ipos"
           target="_blank"
           rel="noopener noreferrer"
           className="text-xs text-[var(--color-accent)] hover:underline mt-2 inline-block"
         >
-          View on Stock Analysis →
+          View on Nasdaq →
         </a>
       </div>
     );
@@ -86,7 +86,7 @@ export function IPOList({ hostColor }: IPOListProps) {
           )}
         </div>
         <a
-          href="https://stockanalysis.com/ipos/"
+          href="https://www.nasdaq.com/market-activity/ipos"
           target="_blank"
           rel="noopener noreferrer"
           className="text-xs text-[var(--color-accent)] hover:underline"
@@ -124,7 +124,7 @@ export function IPOList({ hostColor }: IPOListProps) {
                   <td className="py-2 px-3">
                     <div>
                       <a
-                        href={`https://stockanalysis.com/stocks/${ipo.symbol.toLowerCase()}/`}
+                        href={`https://www.nasdaq.com/market-activity/stocks/${ipo.symbol.toLowerCase()}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="font-bold hover:underline"
@@ -153,12 +153,12 @@ export function IPOList({ hostColor }: IPOListProps) {
       <p className="text-xs text-[var(--color-text-muted)] mt-3 text-center">
         Data from{' '}
         <a
-          href="https://stockanalysis.com/ipos/"
+          href="https://www.nasdaq.com/market-activity/ipos"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[var(--color-accent)] hover:underline"
         >
-          stockanalysis.com
+          nasdaq.com
         </a>
       </p>
     </div>
