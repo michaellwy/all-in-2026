@@ -1,5 +1,7 @@
 // Vercel Serverless Function for IPO data proxy
-// Fetches IPO data from stockanalysis.com (no CORS issues server-side)
+// Uses NASDAQ's public IPO calendar API, which returns every priced US IPO
+// (NYSE, NASDAQ, etc.) for a given month with deal size baked in. We fetch
+// every month of 2026 YTD in parallel and aggregate.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
@@ -10,147 +12,82 @@ interface IPOEntry {
   dealSize: string;
 }
 
+interface NasdaqPricedRow {
+  proposedTickerSymbol?: string;
+  companyName?: string;
+  pricedDate?: string;
+  dollarValueOfSharesOffered?: string;
+}
+
+function formatDealSize(raw: string | undefined): string {
+  if (!raw) return 'N/A';
+  // "$150,000,000" -> 150000000
+  const value = parseFloat(raw.replace(/[$,]/g, ''));
+  if (!isFinite(value) || value <= 0) return 'N/A';
+  const millions = value / 1_000_000;
+  if (millions >= 1000) return `$${(millions / 1000).toFixed(1)}B`;
+  if (millions >= 10) return `$${millions.toFixed(0)}M`;
+  return `$${millions.toFixed(1)}M`;
+}
+
+function formatIpoDate(raw: string | undefined): string {
+  // NASDAQ returns M/D/YYYY. Convert to "Mon D, YYYY" to match prior shape.
+  if (!raw) return '';
+  const [m, d, y] = raw.split('/').map((n) => parseInt(n, 10));
+  if (!m || !d || !y) return raw;
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[m - 1]} ${d}, ${y}`;
+}
+
+async function fetchMonth(yyyyMm: string): Promise<NasdaqPricedRow[]> {
+  const url = `https://api.nasdaq.com/api/ipo/calendar?date=${yyyyMm}`;
+  const res = await fetch(url, {
+    headers: {
+      'User-Agent':
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+      Accept: 'application/json',
+    },
+  });
+  if (!res.ok) return [];
+  const json = (await res.json()) as {
+    data?: { priced?: { rows?: NasdaqPricedRow[] | null } };
+  };
+  return json.data?.priced?.rows ?? [];
+}
+
 export default async function handler(
-  req: VercelRequest,
+  _req: VercelRequest,
   res: VercelResponse
 ) {
   try {
-    const url = 'https://stockanalysis.com/ipos/';
-
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch IPO page: ${response.status}`);
+    const now = new Date();
+    const currentMonth = now.getUTCFullYear() === 2026 ? now.getUTCMonth() + 1 : 12;
+    const months: string[] = [];
+    for (let m = 1; m <= currentMonth; m++) {
+      months.push(`2026-${String(m).padStart(2, '0')}`);
     }
 
-    const html = await response.text();
-    const ipos: IPOEntry[] = [];
+    const monthResults = await Promise.all(months.map(fetchMonth));
+    const allRows = monthResults.flat();
 
-    // Try to extract data from embedded JSON first
-    const dataMatch = html.match(/"data":\s*(\[\{[^\]]+\}\])/);
+    const ipos: IPOEntry[] = allRows
+      .filter((r) => r.proposedTickerSymbol && r.pricedDate?.endsWith('/2026'))
+      .map((r) => ({
+        symbol: (r.proposedTickerSymbol || '').trim(),
+        name: (r.companyName || '').trim(),
+        ipoDate: formatIpoDate(r.pricedDate),
+        dealSize: formatDealSize(r.dollarValueOfSharesOffered),
+      }))
+      // Newest first
+      .sort((a, b) => +new Date(b.ipoDate) - +new Date(a.ipoDate));
 
-    if (dataMatch) {
-      try {
-        const rawData = JSON.parse(dataMatch[1]);
-
-        // Filter for 2026 IPOs
-        const ipos2026 = rawData
-          .filter((item: { d?: string }) => item.d && item.d.includes('2026'))
-          .slice(0, 15);
-
-        // Fetch deal size for each IPO
-        const iposWithDealSize = await Promise.all(
-          ipos2026.map(async (item: { s?: string; n?: string; d?: string }) => {
-            const symbol = item.s || '';
-            const dealSize = await fetchDealSize(symbol);
-            return {
-              symbol,
-              name: item.n || '',
-              ipoDate: item.d || '',
-              dealSize,
-            };
-          })
-        );
-
-        if (iposWithDealSize.length > 0) {
-          res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate');
-          return res.status(200).json(iposWithDealSize);
-        }
-      } catch {
-        console.log('Failed to parse embedded JSON, trying HTML table');
-      }
-    }
-
-    // Fallback: parse HTML table
-    const tableRows = html.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi);
-
-    if (tableRows && tableRows.length > 1) {
-      for (const row of tableRows.slice(1, 16)) {
-        const cells = row.match(/<td[^>]*>([\s\S]*?)<\/td>/gi);
-
-        if (cells && cells.length >= 3) {
-          const getText = (cell: string) => cell.replace(/<[^>]+>/g, '').trim();
-          const dateText = getText(cells[0]);
-
-          if (dateText.includes('2026')) {
-            const symbolMatch = cells[1].match(/>([A-Z]+)</);
-            const symbol = symbolMatch ? symbolMatch[1] : getText(cells[1]);
-
-            ipos.push({
-              symbol,
-              name: getText(cells[2]),
-              ipoDate: dateText,
-              dealSize: 'N/A',
-            });
-          }
-        }
-      }
-
-      if (ipos.length > 0) {
-        const iposWithDealSize = await Promise.all(
-          ipos.map(async (ipo) => ({
-            ...ipo,
-            dealSize: await fetchDealSize(ipo.symbol),
-          }))
-        );
-
-        res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate');
-        return res.status(200).json(iposWithDealSize);
-      }
-    }
-
-    return res.status(200).json([]);
+    res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate');
+    return res.status(200).json(ipos);
   } catch (error) {
     console.error('IPO fetch error:', error);
     return res.status(500).json({
       error: 'Failed to fetch IPO data',
       details: error instanceof Error ? error.message : 'Unknown error',
     });
-  }
-}
-
-async function fetchDealSize(symbol: string): Promise<string> {
-  try {
-    const url = `https://stockanalysis.com/stocks/${symbol.toLowerCase()}/`;
-
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      },
-    });
-
-    if (!response.ok) {
-      return 'N/A';
-    }
-
-    const html = await response.text();
-
-    const dealSizePatterns = [
-      /raising (?:about )?\$?([\d,.]+)\s*(?:million|M)/i,
-      /deal size[:\s]+\$?([\d,.]+)\s*(?:million|M)/i,
-      /\$?([\d,.]+)\s*(?:million|M)\s*(?:IPO|offering)/i,
-      /IPO[^$]*\$?([\d,.]+)\s*(?:million|M)/i,
-    ];
-
-    for (const pattern of dealSizePatterns) {
-      const match = html.match(pattern);
-      if (match) {
-        const value = parseFloat(match[1].replace(/,/g, ''));
-        if (value > 0) {
-          if (value >= 1000) {
-            return `$${(value / 1000).toFixed(1)}B`;
-          }
-          return `$${value.toFixed(0)}M`;
-        }
-      }
-    }
-
-    return 'N/A';
-  } catch {
-    return 'N/A';
   }
 }
